@@ -1,5 +1,5 @@
 from enum import StrEnum
-from typing import Final, Literal
+from typing import Final
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -31,6 +31,6 @@ class Settings(BaseSettings):
 
     embedding_model: Final[str] = "BAAI/bge-small-en-v1.5"
 
-@lru_cache
+@lru_cache(maxsize=1)
 def get_settings() -> Settings:
     return Settings()
