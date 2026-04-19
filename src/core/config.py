@@ -1,10 +1,16 @@
+from enum import StrEnum
 from typing import Final, Literal
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from torch.fx.experimental.symbolic_shapes import lru_cache
 
-LogLevel = Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+class LogLevel(StrEnum):
+    DEBUG = "DEBUG"
+    INFO = "INFO"
+    WARNING = "WARNING"
+    ERROR = "ERROR"
+    CRITICAL = "CRITICAL"
 
 
 class Settings(BaseSettings):
@@ -14,7 +20,7 @@ class Settings(BaseSettings):
         extra="ignore"
     )
 
-    log_level: LogLevel = "INFO"
+    log_level: LogLevel = LogLevel.INFO
 
     llm_api_key: Final[str] = Field(..., description="API key for LLM")
     llm_base_url: Final[str] = Field("https://generativelanguage.googleapis.com/v1beta/openai/")
