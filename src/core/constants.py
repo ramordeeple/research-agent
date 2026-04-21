@@ -2,6 +2,7 @@ from typing import Final
 
 APP_NAME: Final[str] = "AI Research Agent"
 APP_VERSION: Final[str] = "0.1.0"
+API_V1_PREFIX: Final[str] = "/api/v1"
 
 DEFAULT_CHUNK_SIZE: Final[int] = 500
 DEFAULT_CHUNK_OVERLAP: Final[int] = 50
