@@ -14,3 +14,6 @@ DEFAULT_LLM_TEMPERATURE: Final[float] = 0.7
 DEFAULT_LLM_MAX_TOKENS: Final[int] = 1024
 
 EMBEDDING_DIM: Final[int] = 384
+
+CHAT_MIN_LENGTH: Final[int] = 1
+CHAT_MAX_LENGTH: Final[int] = 2000
