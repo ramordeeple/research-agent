@@ -22,14 +22,14 @@ class Settings(BaseSettings):
 
     log_level: LogLevel = LogLevel.INFO
 
-    llm_api_key: Final[str] = Field(..., description="API key for LLM")
-    llm_base_url: Final[str] = Field("https://generativelanguage.googleapis.com/v1beta/openai/")
-    llm_model: Final[str] = "gemini-2.0-flash"
+    llm_api_key: str = Field(..., description="API key for LLM")
+    llm_base_url: str = Field("https://generativelanguage.googleapis.com/v1beta/openai/")
+    llm_model: str = "gemini-2.0-flash"
 
-    qdrant_url: Final[str] = "http://localhost:6333"
-    qdrant_collection: Final[str] = "documents"
+    qdrant_url: str = "http://localhost:6333"
+    qdrant_collection: str = "documents"
 
-    embedding_model: Final[str] = "BAAI/bge-small-en-v1.5"
+    embedding_model: str = "BAAI/bge-small-en-v1.5"
 
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:
