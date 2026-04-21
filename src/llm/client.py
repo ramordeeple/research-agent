@@ -9,7 +9,7 @@ from src.llm.schemas import Message
 
 logger = logging.getLogger(__name__)
 
-@lru_cache
+@lru_cache(maxsize=1)
 def get_llm_client() -> AsyncOpenAI:
     settings = get_settings()
     logger.info("Initializing LLM client: model = %s", settings.llm_model)
