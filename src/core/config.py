@@ -1,9 +1,8 @@
 from enum import StrEnum
-from typing import Final
+from functools import lru_cache
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from torch.fx.experimental.symbolic_shapes import lru_cache
 
 class LogLevel(StrEnum):
     DEBUG = "DEBUG"
@@ -24,7 +23,7 @@ class Settings(BaseSettings):
 
     llm_api_key: str = Field(..., description="API key for LLM")
     llm_base_url: str = Field("https://generativelanguage.googleapis.com/v1beta/openai/")
-    llm_model: str = "gemini-2.0-flash"
+    llm_model: str = "gemini-2.5-flash"
 
     qdrant_url: str = "http://localhost:6333"
     qdrant_collection: str = "documents"
