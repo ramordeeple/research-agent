@@ -8,7 +8,7 @@ from qdrant_client.models import Distance, VectorParams
 
 from src.core.config import get_settings
 from src.core.constants import EMBEDDING_DIM
-from src.rag.ingest import ingest_pdf
+from src.rag.ingest import ingest_file
 from src.rag.vector_client import get_qdrant_client
 
 
@@ -34,41 +34,40 @@ def qdrant_test_collection() -> str:
 @pytest.fixture
 def sample_pdf(tmp_path: Path) -> Path:
     """Create a minimal PDF file for testing."""
-    pdf_path = tmp_path / "sample.pdf"
+    file_path = tmp_path / "sample.pdf"
 
     writer = PdfWriter()
     writer.add_blank_page(width=200, height=200)
 
-    with open(pdf_path, "wb") as f:
+    with open(file_path, "wb") as f:
         writer.write(f)
 
-    return pdf_path
+    return file_path
 
 
 def test_ingest_nonexistent_file_raises(tmp_path: Path) -> None:
     missing = tmp_path / "does_not_exist.pdf"
 
     with pytest.raises(FileNotFoundError):
-        ingest_pdf(missing)
+        ingest_file(missing)
 
 
 def test_ingest_wrong_extension_raises(tmp_path: Path) -> None:
-    not_pdf = tmp_path / "text.txt"
-    not_pdf.write_text("hello")
+    unsupported = tmp_path / "file.xlsx"
+    unsupported.write_text("hello")
 
-    with pytest.raises(ValueError, match="pdf"):
-        ingest_pdf(not_pdf)
+    with pytest.raises(ValueError, match="Unsupported"):
+        ingest_file(unsupported)
 
 
-def test_ingest_pdf_with_text(tmp_path: Path, monkeypatch) -> None:
+def test_ingest_file_with_text(tmp_path: Path, monkeypatch) -> None:
     """Create a PDF with actual text content and verify it's indexed."""
-    from pypdf import PdfWriter
 
     # Create a simple text-based PDF via reportlab if available,
     # or use a fixture file. For now — test with real PDF reading:
-    pdf_path = _create_text_pdf(tmp_path, "Machine learning is a subset of AI. " * 50)
+    file_path = _create_text_pdf(tmp_path, "Machine learning is a subset of AI. " * 50)
 
-    count = ingest_pdf(pdf_path)
+    count = ingest_file(file_path)
 
     assert count > 0
 
@@ -83,8 +82,8 @@ def _create_text_pdf(tmp_path: Path, text: str) -> Path:
     from reportlab.lib.pagesizes import letter
     from reportlab.pdfgen import canvas
 
-    pdf_path = tmp_path / "test.pdf"
-    c = canvas.Canvas(str(pdf_path), pagesize=letter)
+    file_path = tmp_path / "test.pdf"
+    c = canvas.Canvas(str(file_path), pagesize=letter)
 
     y = 750
     for line in text.split(". "):
@@ -95,4 +94,4 @@ def _create_text_pdf(tmp_path: Path, text: str) -> Path:
             y = 750
 
     c.save()
-    return pdf_path
+    return file_path
