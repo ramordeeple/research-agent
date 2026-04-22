@@ -3,25 +3,21 @@ import logging
 from pathlib import Path
 
 from src.core.logger import setup_logging
-from src.rag.ingest import ingest_pdf
+from src.rag.ingest import ingest_file
 
 
-async def main() -> None:
+def main() -> None:
     setup_logging()
     logger = logging.getLogger(__name__)
 
-    pdf_path = Path("data/sample.pdf")
+    file_path = Path("data/sample.pdf")
 
-    logger.info("Current working directory: %s", Path.cwd())
-    logger.info("Looking for file at: %s", pdf_path.resolve())
-    logger.info("File exists: %s", pdf_path.exists())
-
-    if not pdf_path.exists():
-        logger.error("No file at %s", pdf_path)
+    if not file_path.exists():
+        logger.error("No file at %s", file_path)
         return
 
-    count = ingest_pdf(pdf_path)
-    logger.info("Ingested %d pages", count)
+    count = ingest_file(file_path)
+    logger.info("Ingested %d chunks", count)
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
