@@ -10,3 +10,8 @@ class Chunk(BaseModel):
 
     def __len__(self) -> int:
         return len(self.text)
+
+class SearchResult(BaseModel):
+    model_config = ConfigDict(frozen=True)
+    chunk: Chunk
+    score: float = Field(..., ge=0.0, le=1.0)
