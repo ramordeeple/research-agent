@@ -2,33 +2,31 @@ import logging
 import uuid
 from pathlib import Path
 
-
 from qdrant_client.models import PointStruct
 
-from src.core.enums import ExitCode
 from src.core.config import get_settings
 from src.rag.chunking import chunk_text
 from src.rag.embeddings import embed_texts
-from src.rag.pdf_parser import extract_text_from_pdf
-from src.rag.vector_client import ensure_collection_exists, get_qdrant_client
+from src.rag.parser import extract_text
 from src.rag.schemas import Chunk
+from src.rag.vector_client import ensure_collection_exists, get_qdrant_client
 
 logger = logging.getLogger(__name__)
 
 
-def ingest_pdf(file_path: Path) -> int:
-    """Ingest a PDF into Qdrant. Returns number of chunks indexed."""
+def ingest_file(file_path: Path) -> int:
+    """Ingest a file (PDF/TXT/MD) into Qdrant. Returns number of chunks indexed."""
     ensure_collection_exists()
 
-    text = extract_text_from_pdf(file_path)
+    text = extract_text(file_path)
     if not text.strip():
         logger.warning("No text extracted from %s", file_path)
-        return ExitCode.SUCCESS
+        return 0
 
     chunks = chunk_text(text, source=file_path.name)
     if not chunks:
         logger.warning("No chunks produced for %s", file_path)
-        return ExitCode.SUCCESS
+        return 0
 
     logger.info("Embedding %d chunks from %s", len(chunks), file_path.name)
     embeddings = embed_texts([c.text for c in chunks])

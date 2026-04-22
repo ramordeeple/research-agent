@@ -18,3 +18,5 @@ EMBEDDING_DIM: Final[int] = 384
 
 CHAT_MIN_LENGTH: Final[int] = 1
 CHAT_MAX_LENGTH: Final[int] = 2000
+
+SUPPORTED_FILE_EXTENSIONS: Final[tuple[str, ...]] = (".pdf", ".txt", ".md")
