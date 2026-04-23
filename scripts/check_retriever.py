@@ -1,7 +1,6 @@
 import logging
 import sys
 
-from src.core.constants import DEFAULT_TOP_K
 from src.core.logger import setup_logging
 from src.rag.retriever import retrieve
 
@@ -16,7 +15,7 @@ def main() -> None:
         return
 
     query = " ".join(sys.argv[1:])
-    results = retrieve(query, top_k=DEFAULT_TOP_K)
+    results = retrieve(query)
 
     if not results:
         logger.info("No results found")
