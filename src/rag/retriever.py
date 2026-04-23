@@ -6,7 +6,7 @@ from src.core.config import get_settings
 from src.core.constants import DEFAULT_TOP_K
 from src.rag.embeddings import embed_query
 from src.rag.schemas import SearchResult, Chunk
-from src.rag.vector_client import get_qdrant_client
+from src.rag.vector_client import get_qdrant_client, ensure_collection_exists
 
 logger = logging.getLogger(__name__)
 
@@ -17,6 +17,8 @@ def retrieve(query: str, top_k: int = DEFAULT_TOP_K) -> list[SearchResult]:
 
     if top_k <= 0:
         raise ValueError(f"top_k must be >= 0, got {top_k}")
+
+    ensure_collection_exists()
 
     query_embedding = embed_query(query)
     raw_points = _search_qdrant(query_embedding, top_k)
