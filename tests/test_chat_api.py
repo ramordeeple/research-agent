@@ -21,14 +21,18 @@ def test_chat_too_long_message_returns_422(client: TestClient) -> None:
 
 
 def test_chat_returns_answer(client: TestClient, monkeypatch) -> None:
-    async def fake_chat(message: str) -> str:
-        return f"mocked answer for: {message}"
+    async def fake_chat(message: str) -> tuple[str, list]:
+        return f"mocked answer for: {message}", []
 
     monkeypatch.setattr("src.api.chat.process_chat", fake_chat)
 
-    response = client.post(f"{API_V1_PREFIX}/chat", json={"message": "Say 'OK'"})
+    response = client.post(
+        f"{API_V1_PREFIX}/chat",
+        json={"message": "Say 'OK'"},
+    )
 
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
     assert "answer" in data
+    assert "sources" in data
     assert "mocked answer for" in data["answer"]
