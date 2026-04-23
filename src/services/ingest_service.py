@@ -10,22 +10,17 @@ logger = logging.getLogger(__name__)
 
 
 def process_upload(filename: str, file_stream) -> int:
-    """Save uploaded file to a temp location, ingest it, clean up. Returns chunk count."""
+    """Save uploaded file to a temp dir, ingest it, clean up. Returns chunk count."""
     _validate_filename(filename)
 
-    with tempfile.NamedTemporaryFile(
-        suffix=Path(filename).suffix,
-        delete=False,
-    ) as tmp:
-        tmp_path = Path(tmp.name)
-        shutil.copyfileobj(file_stream, tmp)
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        tmp_path = Path(tmp_dir) / filename
 
-    try:
-        logger.info("Ingesting uploaded file: %s (temp: %s)", filename, tmp_path)
-        chunks_indexed = ingest_file(tmp_path)
-        return chunks_indexed
-    finally:
-        tmp_path.unlink(missing_ok=True)
+        with open(tmp_path, "wb") as f:
+            shutil.copyfileobj(file_stream, f)
+
+        logger.info("Ingesting uploaded file: %s", filename)
+        return ingest_file(tmp_path)
 
 
 def _validate_filename(filename: str) -> None:
