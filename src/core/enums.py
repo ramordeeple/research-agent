@@ -2,6 +2,6 @@ from enum import IntEnum
 
 
 class ExitCode(IntEnum):
-    SUCCESS = 0,
-    ERROR = 1,
-    CRITICAL = 2,
+    SUCCESS = 0
+    ERROR = 1
+    CRITICAL = 2
