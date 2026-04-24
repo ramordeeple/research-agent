@@ -1,6 +1,6 @@
 import logging
 
-from src.llm.client import complete
+from src.llm.client import get_llm_provider
 from src.llm.schemas import Message
 from src.rag.retriever import retrieve
 from src.schemas.chat import Source
@@ -28,14 +28,11 @@ async def process_chat(user_message: str) -> tuple[str, list[Source]]:
         Message.user(user_message),
     ]
 
-    answer = await complete(messages)
+    llm = get_llm_provider()
+    answer = await llm.complete(messages)
 
     sources = [
-        Source(
-            text=r.chunk.text,
-            source=r.chunk.source,
-            score=r.score,
-        )
+        Source(text=r.chunk.text, source=r.chunk.source, score=r.score)
         for r in search_results
     ]
 
