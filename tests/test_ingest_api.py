@@ -10,7 +10,7 @@ from src.core.constants import API_V1_PREFIX
 
 def test_ingest_no_file_returns_422(client: TestClient) -> None:
     response = client.post(f"{API_V1_PREFIX}/ingest")
-    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
 
 
 def test_ingest_unsupported_extension_returns_400(client: TestClient) -> None:
@@ -35,12 +35,15 @@ def test_ingest_empty_filename_returns_400(client: TestClient) -> None:
 
     assert response.status_code in (
         status.HTTP_400_BAD_REQUEST,
-        status.HTTP_422_UNPROCESSABLE_ENTITY,
+        status.HTTP_422_UNPROCESSABLE_CONTENT,
     )
 
 
 @pytest.mark.integration
-def test_ingest_txt_file_returns_count(client: TestClient, tmp_path: Path) -> None:
+def test_ingest_txt_file_returns_count(
+        client: TestClient,
+        tmp_path: Path,
+        isolated_qdrant_collection: str) -> None:
     """Upload a real text file, verify chunks are indexed."""
     content = "Machine learning is amazing. " * 100
     txt_path = tmp_path / "test.txt"

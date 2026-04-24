@@ -1,25 +1,14 @@
 
 import pytest
 
-from src.core.config import get_settings
 from src.rag.ingest import ingest_file
 from src.rag.retriever import retrieve
-from src.rag.vector_client import ensure_collection_exists, get_qdrant_client
 
-pytestmark = pytest.mark.integration
+#pytestmark = pytest.mark.integration
 
 
-@pytest.fixture(scope="module")
-def indexed_document(tmp_path_factory) -> None:
-    client = get_qdrant_client()
-    settings = get_settings()
-
-    existing = [c.name for c in client.get_collections().collections]
-    if settings.qdrant_collection in existing:
-        client.delete_collection(settings.qdrant_collection)
-
-    ensure_collection_exists()
-
+@pytest.fixture
+def indexed_document(tmp_path_factory, isolated_qdrant_collection) -> None:
     tmp_path = tmp_path_factory.mktemp("retriever_test")
     doc_path = tmp_path / "ml_doc.txt"
 
