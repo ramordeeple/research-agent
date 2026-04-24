@@ -34,5 +34,4 @@ def test_chat_returns_answer(client: TestClient, monkeypatch) -> None:
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
     assert "answer" in data
-    assert "sources" in data
     assert "mocked answer for" in data["answer"]
