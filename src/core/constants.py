@@ -21,3 +21,5 @@ CHAT_MIN_LENGTH: Final[int] = 1
 CHAT_MAX_LENGTH: Final[int] = 2000
 
 SUPPORTED_FILE_EXTENSIONS: Final[tuple[str, ...]] = (".pdf", ".txt", ".md")
+
+MAX_HISTORY_MESSAGES: Final[int] = 20

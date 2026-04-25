@@ -1,4 +1,6 @@
 from src.agent.schemas import AgentStep
+from src.llm import Message
+from src.memory.store import MemoryStore
 from src.services.chat_service import _extract_sources, _parse_rag_observation
 
 
@@ -55,3 +57,25 @@ def test_extract_sources_deduplicates() -> None:
     sources = _extract_sources(steps)
 
     assert len(sources) == 1
+
+
+def test_memory_store_returns_empty_for_new_session():
+    store = MemoryStore()
+    assert store.get_messages("new-id") == []
+
+
+def test_memory_store_appends_messages():
+    store = MemoryStore()
+    msg = Message.user("hello")
+    store.append("session-1", [msg])
+
+    assert store.get_messages("session-1") == [msg]
+
+
+def test_memory_store_isolates_sessions():
+    store = MemoryStore()
+    store.append("a", [Message.user("from a")])
+    store.append("b", [Message.user("from b")])
+
+    assert len(store.get_messages("a")) == 1
+    assert len(store.get_messages("b")) == 1

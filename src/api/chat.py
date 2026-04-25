@@ -9,7 +9,6 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["chat"])
 
-@router.post("/chat", response_model=ChatResponse, status_code=status.HTTP_200_OK)
+@router.post("/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest) -> ChatResponse:
-    answer, sources = await process_chat(request.message)
-    return ChatResponse(answer=answer, sources=sources)
+    return await process_chat(request)

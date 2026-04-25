@@ -30,22 +30,26 @@ class Agent:
     """ReAct-style agent that uses tools to answer user questions."""
 
     def __init__(
-        self,
-        llm: LLMProvider,
-        tools: ToolRegistry,
-        max_iterations: int = MAX_AGENT_ITERATIONS,
-        timeout_seconds: int = MAX_AGENT_TIMEOUT_SECONDS,
+            self,
+            llm: LLMProvider,
+            tools: ToolRegistry,
+            max_iterations: int = MAX_AGENT_ITERATIONS,
+            timeout_seconds: int = MAX_AGENT_TIMEOUT_SECONDS,
     ) -> None:
         self._llm = llm
         self._tools = tools
         self._max_iterations = max_iterations
         self._timeout_seconds = timeout_seconds
 
-    async def run(self, user_message: str) -> AgentResult:
+    async def run(
+        self,
+        user_message: str,
+        history: list[Message] | None = None,
+    ) -> AgentResult:
         """Run the ReAct loop with timeout protection."""
         try:
             return await asyncio.wait_for(
-                self._run_loop(user_message),
+                self._run_loop(user_message, history or []),
                 timeout=self._timeout_seconds,
             )
         except TimeoutError:
@@ -58,8 +62,12 @@ class Agent:
                 stopped_reason=StoppedReason.TIMEOUT,
             )
 
-    async def _run_loop(self, user_message: str) -> AgentResult:
-        messages = self._build_initial_messages(user_message)
+    async def _run_loop(
+        self,
+        user_message: str,
+        history: list[Message],
+    ) -> AgentResult:
+        messages = self._build_initial_messages(user_message, history)
         steps: list[AgentStep] = []
 
         for iteration in range(1, self._max_iterations + 1):
@@ -68,6 +76,7 @@ class Agent:
 
             if parsed.step_type == StepType.FINAL_ANSWER:
                 logger.info("Agent finished at iteration %d", iteration)
+
                 return AgentResult(
                     answer=parsed.final_answer,
                     steps=steps,
@@ -90,13 +99,18 @@ class Agent:
             stopped_reason=StoppedReason.MAX_ITERATIONS,
         )
 
-    def _build_initial_messages(self, user_message: str) -> list[Message]:
+    def _build_initial_messages(
+        self,
+        user_message: str,
+        history: list[Message],
+    ) -> list[Message]:
         system_prompt = SYSTEM_PROMPT_TEMPLATE.format(
             tools_description=self._tools.describe_all(),
         )
 
         return [
             Message.system(system_prompt),
+            *history,
             Message.user(user_message),
         ]
 

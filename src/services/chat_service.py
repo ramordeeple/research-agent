@@ -1,27 +1,43 @@
 import logging
 import re
+import uuid
 
 from src.agent.schemas import AgentStep
-from src.schemas.chat import Source
+from src.llm import Message
+from src.memory.store import get_memory_store
+from src.schemas.chat import Source, ChatResponse, ChatRequest
 from src.services.agent_service import get_agent
 
 logger = logging.getLogger(__name__)
 
 
-async def process_chat(user_message: str) -> tuple[str, list[Source]]:
-    logger.info("Processing chat message: %d chars", len(user_message))
+async def process_chat(request: ChatRequest) -> ChatResponse:
+    session_id = request.session_id or str(uuid.uuid4())
+
+    memory = get_memory_store()
+    history = memory.get_messages(session_id)
 
     agent = get_agent()
-    result = await agent.run(user_message)
+    result = await agent.run(
+        user_message=request.message,
+        history=history,
+    )
 
     sources = _extract_sources(result.steps)
 
-    logger.info(
-        "Chat response: %d chars, %d sources, stopped=%s, iterations=%d",
-        len(result.answer), len(sources), result.stopped_reason, result.iterations_used,
+    memory.append(
+        session_id,
+        [
+            Message.user(request.message),
+            Message.assistant(result.answer),
+        ],
     )
-    return result.answer, sources
 
+    return ChatResponse(
+        answer=result.answer,
+        sources=sources,
+        session_id=session_id,
+    )
 
 def _extract_sources(steps: list[AgentStep]) -> list[Source]:
     """Extract Source objects from rag_search tool observations in agent steps."""
