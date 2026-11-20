@@ -8,7 +8,7 @@ AI-агент с поддержкой RAG (Retrieval-Augmented Generation) и Re
 - **RAG** — загрузка документов в форматах PDF, TXT, Markdown с автоматическим чанкингом и эмбеддингом
 - **Векторный поиск** через Qdrant с локальными эмбеддингами (BGE-small-en-v1.5)
 - **ReAct агент** — собственная реализация цикла Thought → Action → Observation без LangChain
-- **Tools** — `calculator` (безопасный AST-парсер) и `rag_search` (поиск по загруженным документам)
+- **Поиск по загруженным документам** через инструмент `rag_search`
 - **HTTP API** на FastAPI с эндпоинтами `/chat`, `/ingest`, `/health`
 - **Provider-independent LLM** — работает через OpenAI-совместимый API (по умолчанию Gemini)
 - **Docker-окружение** — multi-stage сборка, non-root user, предзагруженная модель эмбеддингов
@@ -103,19 +103,19 @@ curl -X POST http://localhost:8000/api/v1/ingest \
 
 ### `POST /api/v1/chat`
 
-Вопрос агенту. Агент сам решает, использовать ли инструменты (RAG-поиск, калькулятор) на основе вопроса.
+Агент ищет ответ в загруженных документах или отвечает на общий вопрос напрямую.
 
 **Запрос:**
 ```json
 {
-  "message": "Сколько будет 234 * 567?"
+  "message": "Какая столица Франции?"
 }
 ```
 
 **Ответ:**
 ```json
 {
-  "answer": "234 * 567 = 132678",
+  "answer": "Столица Франции — Париж.",
   "sources": []
 }
 ```
@@ -165,7 +165,7 @@ uv run pytest -v
 
 ```bash
 uv run python scripts/check_chat.py "тестовый вопрос"
-uv run python scripts/check_agent.py "вопрос для агента"
+uv run python scripts/check_agent.py
 uv run python scripts/check_retriever.py "что искать"
 ```
 
@@ -204,4 +204,4 @@ uv run python scripts/check_retriever.py "что искать"
 
 **Два слоя схем.** `src/schemas/` для публичного API (контракт с клиентом), `src/<module>/schemas.py` для внутренних доменных моделей. Не смешиваются, чтобы изменения внутри не ломали API.
 
-**Безопасность tools через whitelist.** Никаких `python_exec`/`shell`. Калькулятор использует AST-парсер вместо `eval()`. Системный промпт явно ограничивает scope агента.
+**Безопасность tools через whitelist.** Агент может вызывать только инструменты из реестра. Системный промпт задаёт область задач агента.

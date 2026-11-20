@@ -14,16 +14,16 @@ def test_parse_final_answer() -> None:
 
 def test_parse_tool_call() -> None:
     text = (
-        "Thought: I need to calculate this.\n"
-        "Action: calculator\n"
-        'Action Input: {"expression": "2 + 3"}'
+        "Thought: I need to search the documents.\n"
+        "Action: rag_search\n"
+        'Action Input: {"query": "study duration"}'
     )
 
     result = parse_llm_response(text)
 
     assert result.step_type == StepType.THOUGHT_ACTION
-    assert result.action == "calculator"
-    assert result.action_input == {"expression": "2 + 3"}
+    assert result.action == "rag_search"
+    assert result.action_input == {"query": "study duration"}
 
 
 def test_parse_missing_action() -> None:
@@ -38,8 +38,8 @@ def test_parse_missing_action() -> None:
 def test_parse_invalid_json_input() -> None:
     text = (
         "Thought: I'll try to use a tool.\n"
-        "Action: calculator\n"
-        "Action Input: {expression: not valid json}"
+        "Action: rag_search\n"
+        "Action Input: {query: not valid json}"
     )
 
     result = parse_llm_response(text)
@@ -67,12 +67,12 @@ def test_parse_prefers_final_answer_over_action() -> None:
     """If both Final Answer and Action present, Final Answer wins."""
     text = (
         "Thought: Done.\n"
-        "Action: calculator\n"
-        'Action Input: {"expression": "1+1"}\n'
-        "Final Answer: The result is 2."
+        "Action: rag_search\n"
+        'Action Input: {"query": "study duration"}\n'
+        "Final Answer: The study lasted 12 weeks."
     )
 
     result = parse_llm_response(text)
 
     assert result.step_type == StepType.FINAL_ANSWER
-    assert result.final_answer == "The result is 2."
+    assert result.final_answer == "The study lasted 12 weeks."

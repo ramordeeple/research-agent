@@ -1,17 +1,18 @@
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
 from src.agent.agent import Agent
 from src.agent.schemas import StoppedReason
-from src.tools.calculator import CalculatorTool
+from src.rag.schemas import Chunk, SearchResult
+from src.tools.rag_search import RagSearchTool
 from src.tools.registry import ToolRegistry
 
 
 @pytest.fixture
 def registry() -> ToolRegistry:
     registry = ToolRegistry()
-    registry.register(CalculatorTool())
+    registry.register(RagSearchTool())
     return registry
 
 
@@ -40,21 +41,33 @@ async def test_agent_returns_final_answer_immediately(registry: ToolRegistry) ->
 
 @pytest.mark.asyncio
 async def test_agent_uses_tool_then_finishes(registry: ToolRegistry) -> None:
-    """Agent calls calculator, gets observation, then gives final answer."""
+    """Agent searches documents, gets an observation, then gives a final answer."""
     llm = _make_llm([
-        'Thought: I need to calculate.\nAction: calculator\nAction Input: {"expression": "5 * 7"}',
-        "Thought: Got the result.\nFinal Answer: 5 times 7 equals 35.",
+        (
+            "Thought: I need to search the study notes.\n"
+            "Action: rag_search\n"
+            'Action Input: {"query": "study duration", "top_k": 1}'
+        ),
+        "Thought: Got the result.\nFinal Answer: The study lasted 12 weeks.",
     ])
+    search_result = SearchResult(
+        chunk=Chunk(text="The study lasted 12 weeks.", index=0, source="notes.txt"),
+        score=0.85,
+    )
 
     agent = Agent(llm=llm, tools=registry)
-    result = await agent.run("What is 5 times 7?")
+    with patch("src.tools.rag_search.retrieve", return_value=[search_result]) as retrieve:
+        result = await agent.run("How long did the study in my notes last?")
 
-    assert "35" in result.answer
+    retrieve.assert_called_once_with("study duration", top_k=1)
+    assert result.answer == "The study lasted 12 weeks."
     assert result.iterations_used == 2
     assert result.stopped_reason == StoppedReason.FINAL_ANSWER
     assert len(result.steps) == 1
-    assert result.steps[0].action == "calculator"
-    assert result.steps[0].observation == "35"
+    assert result.steps[0].action == "rag_search"
+    assert result.steps[0].observation == (
+        "[1] Source: notes.txt (relevance: 0.85)\nThe study lasted 12 weeks."
+    )
 
 
 @pytest.mark.asyncio
@@ -76,11 +89,12 @@ async def test_agent_handles_unknown_tool(registry: ToolRegistry) -> None:
 async def test_agent_stops_at_max_iterations(registry: ToolRegistry) -> None:
     """Agent stops if no final answer within max_iterations."""
     llm = _make_llm([
-        'Thought: trying\nAction: calculator\nAction Input: {"expression": "1+1"}'
+        'Thought: trying\nAction: rag_search\nAction Input: {"query": "test query"}'
     ] * 10)
 
     agent = Agent(llm=llm, tools=registry, max_iterations=3)
-    result = await agent.run("loop forever")
+    with patch("src.tools.rag_search.retrieve", return_value=[]):
+        result = await agent.run("loop forever")
 
     assert result.stopped_reason == StoppedReason.MAX_ITERATIONS
     assert result.iterations_used == 3
