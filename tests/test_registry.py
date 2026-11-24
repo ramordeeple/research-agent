@@ -1,17 +1,18 @@
 import pytest
 
-from src.tools.calculator import CalculatorTool
+from src.services.agent_service import get_tool_registry
+from src.tools.rag_search import RagSearchTool
 from src.tools.registry import ToolRegistry
 
 
 def test_register_and_get() -> None:
     registry = ToolRegistry()
-    tool = CalculatorTool()
+    tool = RagSearchTool()
 
     registry.register(tool)
 
-    assert registry.get("calculator") is tool
-    assert registry.has("calculator")
+    assert registry.get("rag_search") is tool
+    assert registry.has("rag_search")
 
 
 def test_get_nonexistent_raises() -> None:
@@ -23,20 +24,20 @@ def test_get_nonexistent_raises() -> None:
 
 def test_register_duplicate_raises() -> None:
     registry = ToolRegistry()
-    registry.register(CalculatorTool())
+    registry.register(RagSearchTool())
 
     with pytest.raises(ValueError, match="already registered"):
-        registry.register(CalculatorTool())
+        registry.register(RagSearchTool())
 
 
-def test_describe_all_includes_tool_info() -> None:
-    registry = ToolRegistry()
-    registry.register(CalculatorTool())
+def test_default_registry_describes_document_search() -> None:
+    registry = get_tool_registry()
 
     description = registry.describe_all()
 
-    assert "calculator" in description
-    assert "expression" in description
+    assert [tool.name for tool in registry.list_tools()] == ["rag_search"]
+    assert "rag_search" in description
+    assert '"query": string' in description
 
 
 def test_describe_all_empty() -> None:

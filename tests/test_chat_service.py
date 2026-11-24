@@ -34,9 +34,9 @@ def test_extract_sources_skips_non_rag_steps() -> None:
         AgentStep(
             iteration=1,
             thought="thinking",
-            action="calculator",
-            action_input={"expression": "2+2"},
-            observation="4",
+            action="other_tool",
+            action_input={},
+            observation="[1] Source: doc.pdf (relevance: 0.85)\nText from another tool.",
         ),
     ]
 
